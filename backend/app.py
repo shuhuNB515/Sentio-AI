@@ -38,6 +38,19 @@ jwt = JWTManager(app)
 # 初始化数据库
 init_db()
 
+# ============ 根路由 ============
+
+@app.route("/")
+def home():
+    return jsonify({
+        "name": "Sentio-AI",
+        "version": "1.0",
+        "author": "shuhuNB560",
+        "github": "https://github.com/shuhuNB515/Sentio-AI",
+        "frontend": "https://shuhuNB515.github.io/Sentio-AI/",
+        "docs": "/api/health"
+    })
+
 # ============ 认证接口 ============
 
 @app.route("/api/auth/register", methods=["POST"])
