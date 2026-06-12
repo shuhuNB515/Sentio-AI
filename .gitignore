@@ -44,3 +44,6 @@ temp/
 # 测试文件
 test_*.py
 test_stt.py
+
+# 个人图片素材
+图片/

@@ -1,6 +1,10 @@
 import axios from 'axios'
 
-const API_BASE = 'http://localhost:5000/api'
+// 自动检测环境：开发环境走本地，生产环境走 PythonAnywhere
+const isDev = import.meta.env.DEV || window.location.hostname === 'localhost'
+const API_BASE = isDev
+  ? 'http://localhost:5000/api'
+  : 'https://shuhuNB666.pythonanywhere.com/api'
 
 const api = axios.create({
   baseURL: API_BASE,
