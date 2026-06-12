@@ -1,10 +1,24 @@
 import axios from 'axios'
 
-// 自动检测环境：开发环境走本地，生产环境走 PythonAnywhere
-const isDev = import.meta.env.DEV || window.location.hostname === 'localhost'
-const API_BASE = isDev
-  ? 'http://localhost:5000/api'
-  : 'https://shuhuNB666.pythonanywhere.com/api'
+// API 地址自动检测
+// 本地开发: http://localhost:5000
+// 自定义域名(HTTP): API走同协议HTTP避免CORS警告
+// GitHub Pages(HTTPS): 后端PythonAnywhere自带HTTPS
+// PythonAnywhere免费版 *.pythonanywhere.com 支持HTTPS
+const getApiBase = () => {
+  const host = window.location.hostname
+  // 本地开发
+  if (host === 'localhost' || host === '127.0.0.1') {
+    return 'http://localhost:5000/api'
+  }
+  // 自定义域名（如 shuhu.me）—— 如果是HTTP，后端也用HTTP避免mixed content warning
+  // PythonAnywhere 免费版 *.pythonanywhere.com 同时支持 HTTP/HTTPS
+  const isHttps = window.location.protocol === 'https:'
+  const backendHost = 'shuhuNB666.pythonanywhere.com'
+  return `${isHttps ? 'https' : 'http'}://${backendHost}/api`
+}
+
+const API_BASE = getApiBase()
 
 const api = axios.create({
   baseURL: API_BASE,
@@ -20,11 +34,15 @@ api.interceptors.request.use(config => {
   return config
 })
 
-// 响应拦截器 - 处理401
+// 响应拦截器 - 处理401 和 网络错误
 api.interceptors.response.use(
   res => res,
   err => {
-    if (err.response?.status === 401) {
+    if (!err.response) {
+      // 网络错误 —— 后端未启动或不可达
+      console.error('[Sentio-AI] 后端连接失败:', err.message)
+      console.error('[Sentio-AI] API地址:', API_BASE)
+    } else if (err.response.status === 401) {
       localStorage.removeItem('token')
       localStorage.removeItem('user')
       window.location.hash = '#/login'

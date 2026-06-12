@@ -201,7 +201,11 @@ const handleSubmit = async () => {
     }
     router.push('/')
   } catch (e) {
-    error.value = e.response?.data?.error || e.message || '操作失败，请重试'
+    if (e.code === 'ERR_NETWORK' || e.message?.includes('Network Error')) {
+      error.value = '无法连接后端服务器，请确保后端已部署在 PythonAnywhere'
+    } else {
+      error.value = e.response?.data?.error || e.message || '操作失败，请重试'
+    }
   } finally {
     loading.value = false
   }

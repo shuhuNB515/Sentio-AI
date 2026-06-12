@@ -7,7 +7,7 @@
 
 <style>
 /* Sentio-AI by shuhuNB560 / shuhuNB515 */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+/* 使用系统字体栈，避免 Google Fonts 阻塞渲染 */
 
 * {
   margin: 0;
@@ -49,10 +49,14 @@ html, body, #app {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', sans-serif;
   background: var(--bg-primary);
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
+}
+
+code, pre, .mono {
+  font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', 'Consolas', 'Menlo', monospace;
 }
 
 ::-webkit-scrollbar {

@@ -39,7 +39,7 @@ class Config:
     RATE_LIMIT_PER_MINUTE = int(os.getenv("RATE_LIMIT_PER_MINUTE", "20"))
 
     # CORS
-    CORS_ORIGINS = os.getenv("CORS_ORIGINS", "http://localhost:5173,http://localhost:5174,https://shuhuNB515.github.io")
+    CORS_ORIGINS = os.getenv("CORS_ORIGINS", "http://localhost:5173,http://localhost:5174,https://shuhuNB515.github.io,http://shuhu.me,https://shuhu.me")
 
     # 截图存储
     SCREENSHOT_DIR = os.path.join(os.path.dirname(__file__), "data", "screenshots")
