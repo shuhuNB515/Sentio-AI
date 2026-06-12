@@ -251,6 +251,13 @@ const startRecording = async () => {
     errorMsg.value = ''
     transcript.value = ''
     cancelled = false
+
+    // 检查安全上下文
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      errorMsg.value = '麦克风需要 HTTPS 连接，请访问 https://shuhuNB515.github.io/Sentio-AI/'
+      return
+    }
+
     stream = await navigator.mediaDevices.getUserMedia({ audio: true })
 
     mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' })
@@ -295,7 +302,11 @@ const startRecording = async () => {
     startVolumeDetection()
   } catch (err) {
     console.error('[Voice] 麦克风错误:', err)
-    errorMsg.value = '无法访问麦克风，请检查权限设置'
+    if (err.name === 'NotAllowedError') {
+      errorMsg.value = '麦克风权限被拒绝，请在浏览器设置中允许。如果用HTTP访问，请改用HTTPS。'
+    } else {
+      errorMsg.value = '无法访问麦克风，请检查权限设置（需要HTTPS连接）'
+    }
   }
 }
 

@@ -104,6 +104,11 @@ const toggleCamera = async () => {
 }
 
 const startCamera = async () => {
+  // 先检查 navigator.mediaDevices 是否存在（HTTP 环境下为 undefined）
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    cameraError.value = '当前页面不是安全连接（HTTPS），浏览器不允许使用摄像头。\n请访问 https://shuhuNB515.github.io/Sentio-AI/'
+    return
+  }
   try {
     stream = await navigator.mediaDevices.getUserMedia({
       video: { width: 640, height: 480, facingMode: 'user' }

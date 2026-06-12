@@ -149,6 +149,12 @@ const stopVoiceCommand = () => {
 }
 
 const startVoiceCommand = () => {
+  // 检查安全上下文（HTTP 下 mediaDevices 为 undefined）
+  if (!navigator.mediaDevices) {
+    voiceCmdResult.value = '语音命令需要 HTTPS 连接，请访问 https://shuhuNB515.github.io/Sentio-AI/'
+    setTimeout(() => { voiceCmdResult.value = '' }, 6000)
+    return
+  }
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
   if (!SpeechRecognition) {
     voiceCmdResult.value = '当前浏览器不支持语音识别（请用Chrome/Edge）'
