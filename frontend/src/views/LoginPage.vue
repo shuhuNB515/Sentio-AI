@@ -2,7 +2,7 @@
   <div class="login-page">
     <!-- 背景图 + 雨滴效果 -->
     <div class="bg-canvas">
-      <img src="/bg.png" class="bg-image" alt="" />
+      <img :src="baseUrl + 'bg.png'" class="bg-image" alt="" />
       <div class="bg-overlay"></div>
       <RainEffect />
     </div>
@@ -161,6 +161,8 @@
 
 <script setup>
 import { ref } from 'vue'
+
+const baseUrl = import.meta.env.BASE_URL
 import { useRouter } from 'vue-router'
 import { useAuth } from '../composables/useAuth'
 import RainEffect from '../components/RainEffect.vue'

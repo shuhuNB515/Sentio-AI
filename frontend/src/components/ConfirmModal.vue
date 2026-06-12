@@ -3,7 +3,7 @@
     <div class="confirm-overlay" @click.self="$emit('cancel')">
       <div class="confirm-box">
         <!-- 图片 -->
-        <img :src="image || '/alert.png'" class="confirm-img" alt="" />
+        <img :src="image || fallbackImg" class="confirm-img" alt="" />
         <!-- 文字 -->
         <p class="confirm-text">{{ message }}</p>
         <!-- 按钮 -->
@@ -17,8 +17,11 @@
 </template>
 
 <script setup>
-defineProps({ message: String, image: String })
+const props = defineProps({ message: String, image: String })
 defineEmits(['confirm', 'cancel'])
+
+// GitHub Pages 子路径兼容：import.meta.env.BASE_URL 在开发环境为 '/'，生产环境为 '/Sentio-AI/'
+const fallbackImg = import.meta.env.BASE_URL + 'alert.png'
 </script>
 
 <style scoped>

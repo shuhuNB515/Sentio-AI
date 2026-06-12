@@ -27,6 +27,10 @@
           </svg>
         </div>
         <p class="placeholder-text">点击下方按钮开启摄像头</p>
+        <div v-if="cameraError" class="camera-error">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+          {{ cameraError }}
+        </div>
       </div>
 
       <!-- 顶部状态 -->
@@ -79,7 +83,8 @@ const emit = defineEmits(['frame-captured', 'camera-status', 'screenshot-taken']
 const videoEl = ref(null)
 const cameraActive = ref(false)
 const currentTime = ref('')
-const justCaptured = ref(false)  // 截图闪光效果
+const justCaptured = ref(false)
+const cameraError = ref('')
 let stream = null
 let frameInterval = null
 let timeInterval = null
@@ -90,6 +95,7 @@ const updateTime = () => {
 }
 
 const toggleCamera = async () => {
+  cameraError.value = ''
   if (cameraActive.value) {
     stopCamera()
   } else {
@@ -117,6 +123,14 @@ const startCamera = async () => {
     updateTime()
   } catch (err) {
     console.error('Camera error:', err)
+    cameraActive.value = false
+    if (err.name === 'NotAllowedError') {
+      cameraError.value = '摄像头权限被拒绝，请在浏览器设置中允许摄像头访问。如果是HTTP连接，请使用HTTPS访问（如 https://shuhuNB515.github.io/Sentio-AI/ ）'
+    } else if (err.name === 'NotFoundError') {
+      cameraError.value = '未检测到摄像头设备'
+    } else {
+      cameraError.value = '摄像头开启失败：' + (err.message || '未知错误') + '。请确保使用HTTPS连接。'
+    }
   }
 }
 
@@ -251,6 +265,21 @@ onUnmounted(() => {
 .placeholder-text {
   font-size: 13px;
   color: var(--text-muted);
+}
+
+.camera-error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 8px;
+  font-size: 11px;
+  color: #fca5a5;
+  text-align: left;
+  line-height: 1.5;
 }
 
 /* 覆盖层 */

@@ -344,7 +344,7 @@ const handleLogout = () => {
 const logoutConfirm = reactive({
   show: false,
   message: '确定要退出登录吗？记得打钱！',
-  image: '/pay.png',
+  image: import.meta.env.BASE_URL + 'pay.png',
 })
 
 const doLogout = () => {
