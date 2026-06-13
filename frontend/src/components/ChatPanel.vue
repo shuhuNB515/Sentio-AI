@@ -97,6 +97,10 @@ import { chatAPI, conversationAPI } from '../api'
 import { isDirectApiEnabled, chatCompletion, visionCompletion } from '../services/directApi'
 import VoiceInput from './VoiceInput.vue'
 
+// 直连模式性能优化：记录上次调用时间，避免短时间重复请求
+let lastDirectCall = 0
+const DIRECT_CALL_COOLDOWN = 2000  // ms
+
 const props = defineProps({
   sessionId: String,
   currentFrame: String,
@@ -147,6 +151,11 @@ const sendMessage = async (overrideText = null) => {
 
     // 优先使用前端直连 API
     if (isDirectApiEnabled()) {
+      // 防抖：2秒内不重复发送
+      const now = Date.now()
+      if (now - lastDirectCall < DIRECT_CALL_COOLDOWN) return
+      lastDirectCall = now
+
       if (props.currentFrame) {
         reply = await visionCompletion(text, props.currentFrame)
       } else {
