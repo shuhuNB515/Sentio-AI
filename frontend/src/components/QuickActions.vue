@@ -25,6 +25,7 @@
 <script setup>
 import { ref } from 'vue'
 import { visionAPI } from '../api'
+import { isDirectApiEnabled, quickVision } from '../services/directApi'
 
 const props = defineProps({
   cameraActive: Boolean,
@@ -45,14 +46,19 @@ const actions = [
 ]
 
 const executeAction = async (action) => {
-  if (!props.currentFrame) return
+  if (!props.currentFrame || !props.cameraActive) return
   loadingAction.value = action.id
-
   try {
-    const res = await visionAPI.quick(props.currentFrame, action.action, props.sessionId)
-    emit('action-result', `${action.name}: ${res.data.result}`)
+    let result
+    if (isDirectApiEnabled()) {
+      result = await quickVision(props.currentFrame, action.action)
+    } else {
+      const res = await visionAPI.quick(props.currentFrame, action.action, props.sessionId)
+      result = res.data.result
+    }
+    emit('action-result', `${action.name}: ${result}`)
   } catch (e) {
-    emit('action-result', `错误: ${e.response?.data?.error || e.message}`)
+    emit('action-result', `错误: ${e.message}`)
   } finally {
     loadingAction.value = null
   }
