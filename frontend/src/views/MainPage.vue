@@ -82,6 +82,7 @@
           <h2 class="page-title">
             <span class="title-dot" :style="{ background: currentConvId ? 'var(--success)' : 'var(--text-muted)' }"></span>
             {{ currentConvTitle }}
+            <span v-if="!isSecure" class="insecure-badge" :title="'当前通过' + pageProtocol + '访问，摄像头和麦克风不可用。请用 HTTPS。'">&#9888; {{ pageProtocol }}</span>
           </h2>
         </div>
         <div class="top-bar-right">
@@ -231,6 +232,8 @@ const cameraActive = ref(false)
 const currentFrame = ref(null)
 const enableTTS = ref(true)
 const backendConnected = ref(false)
+const isSecure = ref(window.isSecureContext)
+const pageProtocol = ref(window.location.protocol.replace(':', ''))
 const toasts = ref([])
 const rightTab = ref('chat')  // 'chat' | 'recognition'
 const cameraVideoFilter = ref('')  // 摄像头滤镜
@@ -547,6 +550,9 @@ const checkBackend = async () => {
 }
 
 onMounted(async () => {
+  // 调试：打印当前页面信息
+  console.log('[Sentio-AI] 页面协议:', window.location.protocol, '安全:', window.isSecureContext, 'mediaDevices:', !!navigator.mediaDevices)
+
   // 恢复本地设置缓存
   const saved = localStorage.getItem('app_settings')
   if (saved) {
@@ -857,6 +863,20 @@ onMounted(async () => {
   height: 8px;
   border-radius: 50%;
   flex-shrink: 0;
+}
+
+.insecure-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #fca5a5;
+  white-space: nowrap;
 }
 
 .top-bar-right {
