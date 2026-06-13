@@ -19,11 +19,11 @@ class Config:
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
     OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")
 
-    # 模型选择
-    VISION_MODEL = os.getenv("VISION_MODEL", "gpt-4o")
-    CHAT_MODEL = os.getenv("CHAT_MODEL", "gpt-4o-mini")
-    STT_MODEL = os.getenv("STT_MODEL", "whisper-1")
-    TTS_MODEL = os.getenv("TTS_MODEL", "tts-1")
+    # 模型选择 (MIMO API)
+    VISION_MODEL = os.getenv("VISION_MODEL", "mimo-v2-omni")
+    CHAT_MODEL = os.getenv("CHAT_MODEL", "mimo-v2-flash")
+    STT_MODEL = os.getenv("STT_MODEL", "mimo-v2.5-asr")
+    TTS_MODEL = os.getenv("TTS_MODEL", "mimo-v2.5-tts")
     TTS_VOICE = os.getenv("TTS_VOICE", "alloy")
 
     # 成本控制参数
