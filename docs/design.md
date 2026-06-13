@@ -11,7 +11,7 @@ Sentio-AI 是一款**实时视觉 AI 对话助手**。用户打开摄像头与�
 
 **部署地址**: [https://shuhu.me](https://shuhu.me)
 **GitHub**: [https://github.com/shuhuNB515/Sentio-AI](https://github.com/shuhuNB515/Sentio-AI)
-**Demo 视频**: [百度网盘](https://pan.baidu.com/s/12GxFtEJNVGS-Myr2huvjgg?pwd=ixpx)（提取码: ixpx）
+**Demo 视频**: [百度网盘](https://pan.baidu.com/s/1WTH2lF1SPLO4uY59-kEYkQ?pwd=81j8)（提取码: 81j8）
 
 **技术栈：**
 - 前端：Vue 3 (Composition API) + Vite + Vue Router + Axios
