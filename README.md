@@ -6,6 +6,8 @@
 
 Sentio-AI 是一个**实时视觉 + 语音 + 对话**的全栈 AI 助手。它能通过摄像头看到你的画面，通过麦克风听到你的声音，并结合 AI 模型进行自然语言回复。
 
+> **⚠️ 网页版使用须知**：在线部署的后端（PythonAnywhere 免费版）无法直连 MIMO API。**网页版必须手动配置 API 直连**：登录后进入 ⚙️ 设置 → 开启"API 直连" → 填写你的 MIMO API Key、Base URL、Model 并保存。本地开发环境（`localhost`）无需此操作。详见下方 [使用方式](#使用方式)。
+
 ---
 
 ## 功能一览
@@ -99,6 +101,45 @@ Sentio-AI 是一个**实时视觉 + 语音 + 对话**的全栈 AI 助手。它�
 | **前后图像对比** | 原创：抓取两个时间点帧 → 分别 AI 描述 → 对比分析差异 |
 | **成本控制系统** | 原创：帧采样间隔控制、图像质量压缩、对话历史裁剪、相似帧缓存、API 限流 |
 | **响应式适配** | 原创：桌面/平板/手机三档自适应，视觉区可拖拽调整宽度 |
+
+---
+
+## 使用方式
+
+### 🌐 网页版（[https://shuhu.me](https://shuhu.me)）
+
+> **⚠️ 重要提示：网页版运行在 PythonAnywhere 免费版，后端无法直连 MIMO API。必须手动配置 API 直连模式！**
+
+**步骤：**
+
+1. 打开 [https://shuhu.me](https://shuhu.me) → 注册或登录
+2. 点击右上角 ⚙️ **设置**
+3. 找到 **API 直连** 区域：
+   - 打开 **启用开关**
+   - **API Key**：填写你的 MIMO Key（`sk-...` 格式，前往 [MIMO API Keys](https://api.xiaomimimo.com/) 创建）
+   - **Base URL**：`https://api.xiaomimimo.com/v1`
+   - **对话模型**：`mimo-v2-flash`
+   - **视觉模型**：`mimo-v2-omni`
+4. 点击 **保存设置**
+5. 配置生效，即可正常对话
+
+| 配置项 | 值 |
+|--------|-----|
+| API Key | 你的 MIMO API Key（`sk-...`） |
+| Base URL | `https://api.xiaomimimo.com/v1` |
+| 对话模型 | `mimo-v2-flash` |
+| 视觉模型 | `mimo-v2-omni` |
+
+### 💻 本地开发（无需 API 直连）
+
+本地后端可直连 MIMO，只需在 `.env` 中配置 Key：
+
+```bash
+cd backend
+cp .env.example .env
+# 编辑 .env，填入 OPENAI_API_KEY=sk-xxx
+python app.py
+```
 
 ---
 
