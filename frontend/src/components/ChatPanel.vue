@@ -129,7 +129,8 @@ const scrollToBottom = async () => {
 }
 
 const sendMessage = async (overrideText = null) => {
-  const text = (overrideText || inputText.value).trim()
+  const raw = typeof overrideText === 'string' ? overrideText : inputText.value
+  const text = String(raw || '').trim()
   if (!text || !props.sessionId || loading.value) return
 
   messages.value.push({
