@@ -7,9 +7,8 @@ import os
 import bcrypt
 from dotenv import load_dotenv
 
-# 加载.env文件（显式路径确保在任何工作目录下都能找到）
-env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env')
-load_dotenv(env_path, override=True)
+# 加载.env文件（override=True确保覆盖系统环境变量）
+load_dotenv(override=True)
 
 from flask import Flask, request, jsonify, Response, send_file
 from flask_cors import CORS
