@@ -214,6 +214,7 @@ import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '../composables/useAuth'
 import { conversationAPI, visionAPI } from '../api'
+import { isDirectApiEnabled, quickVision } from '../services/directApi'
 import CameraView from '../components/CameraView.vue'
 import ChatPanel from '../components/ChatPanel.vue'
 import QuickActions from '../components/QuickActions.vue'
@@ -393,8 +394,13 @@ const onScreenshotTaken = async (frame) => {
   if (!currentConvId.value) return
   addToast('截图成功，正在分析...', 'info')
   try {
-    const res = await visionAPI.quick(frame, 'describe', currentConvId.value)
-    const text = res.data.result
+    let text
+    if (isDirectApiEnabled()) {
+      text = await quickVision(frame, 'describe')
+    } else {
+      const res = await visionAPI.quick(frame, 'describe', currentConvId.value)
+      text = res.data.result
+    }
 
     // 1. 发送到对话框（显示图片+AI分析）
     if (chatRef.value) {
@@ -502,10 +508,18 @@ const onCompare = async ({ before, after }) => {
   addToast('正在分析两张图片的差异...', 'info')
 
   try {
-    const res = await visionAPI.quick(before, 'describe', currentConvId.value)
-    const res2 = await visionAPI.quick(after, 'describe', currentConvId.value)
+    let desc1, desc2
+    if (isDirectApiEnabled()) {
+      desc1 = await quickVision(before, 'describe')
+      desc2 = await quickVision(after, 'describe')
+    } else {
+      const res = await visionAPI.quick(before, 'describe', currentConvId.value)
+      const res2 = await visionAPI.quick(after, 'describe', currentConvId.value)
+      desc1 = res.data.result
+      desc2 = res2.data.result
+    }
 
-    const comparePrompt = `请对比这两张图片的变化。第一张的描述：${res.data.result}；第二张的描述：${res2.data.result}。请分析两张图之间有什么不同和变化。`
+    const comparePrompt = `请对比这两张图片的变化。第一张的描述：${desc1}；第二张的描述：${desc2}。请分析两张图之间有什么不同和变化。`
 
     if (chatRef.value) {
       chatRef.value.sendImageMessage(after, comparePrompt)
