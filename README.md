@@ -2,6 +2,7 @@
 
 > **Author**: shuhuNB560 / shuhuNB515
 > **Live**: [https://shuhu.me](https://shuhu.me) | [GitHub Pages](https://shuhuNB515.github.io/Sentio-AI/)
+> **Demo 视频**: [百度网盘](https://pan.baidu.com/s/1WTH2lF1SPLO4uY59-kEYkQ?pwd=81j8)（提取码: 81j8）
 
 Sentio-AI 是一个**实时视觉 + 语音 + 对话**的全栈 AI 助手。它能通过摄像头看到你的画面，通过麦克风听到你的声音，并结合 AI 模型进行自然语言回复。
 
