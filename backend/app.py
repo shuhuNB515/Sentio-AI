@@ -7,8 +7,9 @@ import os
 import bcrypt
 from dotenv import load_dotenv
 
-# 加载.env文件（override=True确保覆盖系统环境变量）
-load_dotenv(override=True)
+# 加载.env文件（显式路径确保在任何工作目录下都能找到）
+env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env')
+load_dotenv(env_path, override=True)
 
 from flask import Flask, request, jsonify, Response, send_file
 from flask_cors import CORS
@@ -198,23 +199,32 @@ def chat_endpoint():
         return jsonify({"error": "缺少必要参数"}), 400
 
     try:
-        # 保存用户消息
-        add_message(session_id, "user", user_message, has_image=bool(image_b64))
+        # 数据库操作：保存用户消息（失败不影响对话）
+        try:
+            add_message(session_id, "user", user_message, has_image=bool(image_b64))
+        except Exception as db_err:
+            print(f"[chat] 保存消息失败: {db_err}", flush=True)
 
         reply = chat(session_id, user_message, image_b64)
         record_usage("chat")
 
-        # 保存AI回复
-        add_message(session_id, "assistant", reply)
+        # 数据库操作：保存AI回复（失败不影响对话）
+        try:
+            add_message(session_id, "assistant", reply)
 
-        # 自动更新会话标题（首条消息）
-        conv = get_conversation(session_id)
-        if conv and conv["title"] == "New Conversation":
-            title = user_message[:30] + ("..." if len(user_message) > 30 else "")
-            update_conversation_title(session_id, title)
+            # 自动更新会话标题（首条消息）
+            conv = get_conversation(session_id)
+            if conv and conv["title"] == "New Conversation":
+                title = user_message[:30] + ("..." if len(user_message) > 30 else "")
+                update_conversation_title(session_id, title)
+        except Exception as db_err:
+            print(f"[chat] 保存回复失败: {db_err}", flush=True)
 
-        return jsonify({"reply": reply, "session_id": session_id})
+        return jsonify({"reply": reply})
+
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
 
