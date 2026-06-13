@@ -252,9 +252,13 @@ const startRecording = async () => {
     transcript.value = ''
     cancelled = false
 
-    // 检查安全上下文
+    // 浏览器安全要求
+    if (!window.isSecureContext) {
+      errorMsg.value = `当前页面协议: ${window.location.protocol}//  浏览器要求 HTTPS 才能用麦克风。\n请访问: https://shuhuNB515.github.io/Sentio-AI/`
+      return
+    }
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      errorMsg.value = '麦克风需要 HTTPS 连接，请访问 https://shuhuNB515.github.io/Sentio-AI/'
+      errorMsg.value = '浏览器不支持麦克风API，请使用 Chrome/Edge 最新版'
       return
     }
 
