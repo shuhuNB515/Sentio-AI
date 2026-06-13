@@ -7,13 +7,18 @@
 const getSettings = () => {
   try {
     const saved = localStorage.getItem('app_settings')
+    console.log('[directApi] localStorage app_settings:', saved ? 'found' : 'not found')
     if (saved) {
       const s = JSON.parse(saved)
+      console.log('[directApi] settings keys:', Object.keys(s))
+      console.log('[directApi] directApiEnabled:', s.directApiEnabled, 'hasKey:', !!s.directApiKey, 'hasUrl:', !!s.directBaseUrl)
       if (s.directApiEnabled && s.directApiKey && s.directBaseUrl) {
         return s
       }
     }
-  } catch (e) {}
+  } catch (e) {
+    console.error('[directApi] getSettings error:', e)
+  }
   return null
 }
 
@@ -28,10 +33,14 @@ export const chatCompletion = async (messages, options = {}) => {
   const settings = getSettings()
   if (!settings) throw new Error('API 直连未配置，请在设置中填写 API Key 和 Base URL')
 
-  const { directApiKey, directBaseUrl, directChatModel } = settings
+  const { directApiKey, directChatModel } = settings
   const model = options.model || directChatModel || 'mimo-v2-flash'
+  // 规范化 base URL: 去掉末尾斜杠
+  const baseUrl = settings.directBaseUrl.replace(/\/+$/, '')
 
-  const res = await fetch(`${directBaseUrl}/chat/completions`, {
+  console.log('[directApi] chatCompletion →', baseUrl, 'model:', model)
+
+  const res = await fetch(`${baseUrl}/chat/completions`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -47,10 +56,12 @@ export const chatCompletion = async (messages, options = {}) => {
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({}))
+    console.error('[directApi] chatCompletion failed:', res.status, err)
     throw new Error(err.error?.message || `API 错误 (${res.status})`)
   }
 
   const data = await res.json()
+  console.log('[directApi] chatCompletion OK')
   return data.choices?.[0]?.message?.content || ''
 }
 
@@ -61,8 +72,10 @@ export const visionCompletion = async (text, imageBase64, visionContext = '') =>
   const settings = getSettings()
   if (!settings) throw new Error('API 直连未配置')
 
-  const { directApiKey, directBaseUrl, directVisionModel } = settings
+  const { directApiKey, directVisionModel } = settings
+  const baseUrl = settings.directBaseUrl.replace(/\/+$/, '')
   const model = directVisionModel || 'mimo-v2-omni'
+  console.log('[directApi] visionCompletion →', baseUrl, 'model:', model)
 
   const messages = [
     {
@@ -86,7 +99,7 @@ export const visionCompletion = async (text, imageBase64, visionContext = '') =>
     ],
   })
 
-  const res = await fetch(`${directBaseUrl}/chat/completions`, {
+  const res = await fetch(`${baseUrl}/chat/completions`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -102,10 +115,12 @@ export const visionCompletion = async (text, imageBase64, visionContext = '') =>
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({}))
+    console.error('[directApi] visionCompletion failed:', res.status, err)
     throw new Error(err.error?.message || `API 错误 (${res.status})`)
   }
 
   const data = await res.json()
+  console.log('[directApi] visionCompletion OK')
   return data.choices?.[0]?.message?.content || ''
 }
 
@@ -116,7 +131,8 @@ export const quickVision = async (imageBase64, action) => {
   const settings = getSettings()
   if (!settings) throw new Error('API 直连未配置')
 
-  const { directApiKey, directBaseUrl, directVisionModel } = settings
+  const { directApiKey, directVisionModel } = settings
+  const baseUrl = settings.directBaseUrl.replace(/\/+$/, '')
   const model = directVisionModel || 'mimo-v2-omni'
 
   const prompts = {
@@ -140,7 +156,7 @@ export const quickVision = async (imageBase64, action) => {
     },
   ]
 
-  const res = await fetch(`${directBaseUrl}/chat/completions`, {
+  const res = await fetch(`${baseUrl}/chat/completions`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -151,9 +167,11 @@ export const quickVision = async (imageBase64, action) => {
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({}))
+    console.error('[directApi] quickVision failed:', res.status, err)
     throw new Error(err.error?.message || `API 错误 (${res.status})`)
   }
 
   const data = await res.json()
+  console.log('[directApi] quickVision OK')
   return data.choices?.[0]?.message?.content || ''
 }
