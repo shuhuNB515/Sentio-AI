@@ -1,320 +1,208 @@
 # AI 视觉对话助手 - 设计文档
 
+> Author: shuhuNB560 / shuhuNB515
+> 比赛题目：AI 视觉对话助手
+
+---
+
 ## 一、项目概述
 
-本项目是一款AI视觉对话助手应用，用户通过浏览器打开摄像头和麦克风，AI能够实时看到摄像头画面、听到用户语音，并给予恰当的多模态回应。应用集成了用户认证、对话历史管理、快捷视觉分析等完整功能。
+Sentio-AI 是一款**实时视觉 AI 对话助手**。用户打开摄像头与麦克风后，AI 能实时看到画面、听到声音，并给予多模态回应。支持文字/语音/图片三种输入方式，内置5种快捷视觉分析，支持对话历史管理和个性化设置。
+
+**部署地址**: [https://shuhu.me](https://shuhu.me)
+**GitHub**: [https://github.com/shuhuNB515/Sentio-AI](https://github.com/shuhuNB515/Sentio-AI)
 
 **技术栈：**
-- 前端：Vue3 + Vite + Vue Router + Axios
-- 后端：Flask (Python) + Flask-JWT-Extended + SQLite
-- AI能力：OpenAI API (GPT-4o 视觉理解 + Whisper 语音识别 + TTS 语音合成)
+- 前端：Vue 3 (Composition API) + Vite + Vue Router + Axios
+- 后端：Flask (Python 3.11) + Flask-JWT-Extended + SQLite
+- AI：MIMO API (OpenAI 兼容协议)
+- 部署：GitHub Pages + PythonAnywhere + 自定义域名 shuhu.me
 
 ---
 
 ## 二、用户故事
 
-### 计划实现的用户故事
+### 计划 vs 实现
 
 | 编号 | 用户故事 | 优先级 | 状态 |
 |------|---------|--------|------|
-| US1 | 作为用户，我想打开摄像头让AI看到我的画面，以便AI能理解我周围的环境 | P0 | ✅ 已实现 |
-| US2 | 作为用户，我想通过语音与AI对话，以便解放双手进行自然交互 | P0 | ✅ 已实现 |
-| US3 | 作为用户，我想通过文字与AI对话，以便在嘈杂环境中也能交流 | P0 | ✅ 已实现 |
-| US4 | 作为用户，我想听到AI的语音回复，以便获得更自然的对话体验 | P1 | ✅ 已实现 |
-| US5 | 作为用户，我想让AI结合当前画面回答问题，以便获得更精准的视觉理解 | P0 | ✅ 已实现 |
-| US6 | 作为用户，我想在对话中查看历史消息，以便回顾上下文 | P1 | ✅ 已实现 |
-| US7 | 作为用户，我想开启/关闭语音播报，以便根据场景灵活选择 | P1 | ✅ 已实现 |
-| US8 | 作为用户，我想手动发送当前画面给AI，以便在关键时刻获取视觉分析 | P1 | ✅ 已实现 |
-| US9 | 作为用户，我想查看用量统计，以便了解自己的使用情况 | P2 | ✅ 已实现 |
-| US10 | 作为用户，我想创建新会话，以便清除上下文重新开始 | P1 | ✅ 已实现 |
-| US11 | 作为用户，我想AI能自动检测我说话的起止（VAD），以便无需手动控制录音 | P1 | ✅ 已实现 |
-| US12 | 作为用户，我想AI能自动定期采样画面，以便无需手动截图 | P2 | ✅ 已实现 |
-| US13 | 作为用户，我想在手机上也能使用，以便随时随地对话 | P2 | ✅ 已实现（响应式布局） |
-| US14 | 作为用户，我想AI能区分简单问题和复杂问题使用不同模型，以便节省成本 | P1 | ✅ 已实现（模型路由） |
-| US15 | 作为用户，我想注册账号并登录，以便保存我的对话历史和偏好设置 | P0 | ✅ 已实现 |
-| US16 | 作为用户，我想在侧边栏查看和管理我的历史对话，以便快速切换上下文 | P1 | ✅ 已实现 |
-| US17 | 作为用户，我想一键执行快捷视觉操作（场景描述/OCR/物体识别/翻译/情绪分析），以便快速获取视觉信息 | P0 | ✅ 已实现 |
-| US18 | 作为用户，我想保存摄像头截图到画廊，以便回顾之前看到的画面 | P2 | ✅ 已实现 |
-| US19 | 作为用户，我想在设置面板调整采样间隔、图像质量、TTS语音等参数，以便个性化使用体验 | P2 | ✅ 已实现 |
-| US20 | 作为用户，我想删除不再需要的对话，以便保持对话列表整洁 | P1 | ✅ 已实现 |
+| US1 | 打开摄像头，让AI看到画面并理解环境 | P0 | ✅ 已实现 |
+| US2 | 通过语音与AI对话，解放双手 | P0 | ✅ 已实现 |
+| US3 | 通过文字与AI对话，兼容各种环境 | P0 | ✅ 已实现 |
+| US4 | 听到AI的语音回复（TTS） | P1 | ✅ 已实现 |
+| US5 | AI结合当前摄像头画面回答问题 | P0 | ✅ 已实现 |
+| US6 | 查看对话历史消息，回顾上下文 | P1 | ✅ 已实现 |
+| US7 | 开启/关闭语音播报，灵活切换 | P1 | ✅ 已实现 |
+| US8 | 手动截图发送给AI进行深度分析 | P1 | ✅ 已实现 |
+| US9 | 注册登录，保存对话历史和偏好 | P0 | ✅ 已实现 |
+| US10 | 侧边栏管理对话（新建/切换/删除/归档） | P1 | ✅ 已实现 |
+| US11 | 一键快捷视觉操作（描述/OCR/物体/翻译/情绪） | P0 | ✅ 已实现 |
+| US12 | 自动检测语音起止（VAD静音检测） | P1 | ✅ 已实现 |
+| US13 | 自动定期采样摄像头画面 | P2 | ✅ 已实现 |
+| US14 | 纯文本和含图对话使用不同模型路由 | P1 | ✅ 已实现 |
+| US15 | 设置面板调整参数（帧率/画质/TTS/模型） | P2 | ✅ 已实现 |
+| US16 | 前后两张图像对比分析（拍到变化） | P2 | ✅ 已实现 |
+| US17 | 摄像头实时滤镜（赛博/复古/素描） | P2 | ✅ 已实现 |
+| US18 | 响应式布局适配手机和平板 | P2 | ✅ 已实现 |
+| US19 | 输入自己的API Key直连大模型 | P2 | ✅ 已实现（原创） |
+| US20 | 查看用量统计 | P2 | ✅ 已实现 |
 
-### 最终实现情况
-
-全部20个用户故事均已实现。核心功能完整覆盖了视觉理解、语音交互、多模态对话、用户认证、对话管理、快捷视觉分析六大场景。
+**全部20个用户故事均已实现。**
 
 ---
 
-## 三、系统架构
+## 三、成本控制策略
+
+### 计划 vs 实际采用
+
+| 编号 | 策略 | 原理 | 采用 |
+|------|------|------|------|
+| C1 | 帧采样间隔 | 非每帧发送，按固定间隔（5秒）采样 | ✅ |
+| C2 | 图像压缩 | 前端缩放到max 640px + JPEG quality 70% | ✅ |
+| C3 | 后端二次压缩 | 后端再压至512px + quality 70%，降token | ✅ |
+| C4 | 低细节模式 | vision API 使用 `detail:"low"`（85 tokens vs 765+） | ✅ |
+| C5 | 模型路由 | 纯文本用 flash 模型，含图用 omni 模型 | ✅ |
+| C6 | 相似帧缓存 | MD5哈希比对，命中直接返回 | ✅ |
+| C7 | 历史裁剪 | 只保留最近10轮，控制上下文token | ✅ |
+| C8 | VAD静音检测 | 静音2秒自动停止录音，不发空白音频 | ✅ |
+| C9 | 限流控制 | 每分钟最多20次API调用 | ✅ |
+| C10 | 视觉上下文摘要 | 纯文本对话注入摘要而非图像 | ✅ |
+| C11 | 前端直连模式 | 浏览器直调API，不走后端中转 | ✅（原创） |
+| C12 | JWT无状态认证 | 减少数据库Session查询 | ✅ |
+| C13 | SQLite WAL模式 | 支持并发读写，按需连接 | ✅ |
+
+**采用了13种策略，未采用的有：**
+- 批量帧对比（复杂度高，收益有限）
+- 本地OCR预处理（增加部署复杂度）
+- 语义缓存（误判风险高）
+
+### 核心策略详解
+
+**1. 模型路由**：纯文本对话用 `mimo-v2-flash`（快速/便宜），含图像时用 `mimo-v2-omni`（视觉理解）。flash 成本约为 omni 的 1/5~1/10。
+
+**2. 低细节模式**：`detail: "low"` 固定消耗 85 tokens/图，`"high"` 可能 765+ tokens/图，节省约 89%。
+
+**3. 图像压缩链路**：前端 Canvas reduce → JPEG 70% → 后端 Pillow resize 512px → JPEG 70%，原图约8MB → 最终约15KB，传输量减少 99.8%。
+
+**4. 视觉上下文摘要**：摄像头定时采样 → 生成描述摘要 → 存为 system 消息。后续纯文本对话只需注入摘要，无需每次都发图。将视觉调用从"每轮1次"降到"每5秒1次"。
+
+**5. 前端直连模式（原创）**：用户自配 API Key，浏览器 `fetch()` 直调 AI API。绕过后端中转，消除 PythonAnywhere 免费版网络白名单限制，同时减少后端服务器负载。
+
+---
+
+## 四、系统架构
 
 ```
-┌──────────────────────────────────────────────────┐
-│                 Vue3 前端                          │
-│  ┌─────────┐ ┌──────────┐ ┌──────────┐           │
-│  │LoginPage│ │ MainPage │ │Settings  │           │
-│  └─────────┘ └────┬─────┘ └──────────┘           │
-│         ┌────────┬┴────────┬──────────┐           │
-│  ┌──────┴──┐ ┌───┴───┐ ┌──┴──┐ ┌────┴────┐     │
-│  │CameraVw │ │ChatPnl│ │Voice│ │QuickAct │     │
-│  └────┬────┘ └───┬───┘ └──┬──┘ └────┬────┘     │
-│       └──────────┴────────┴──────────┘           │
-│              api/index.js (Axios)                 │
-└────────────────────┬─────────────────────────────┘
-                     │ HTTP + JWT
-┌────────────────────┼─────────────────────────────┐
-│            Flask 后端                              │
-│  ┌─────────────────┴──────────────────────────┐  │
-│  │              app.py (路由 + JWT认证)         │  │
-│  └──┬──────┬──────┬──────┬──────┬────────────┘  │
-│     │      │      │      │      │                │
-│  ┌──┴──┐┌──┴──┐┌──┴──┐┌──┴──┐┌──┴──────┐       │
-│  │vision││speech││chat ││ db  ││cost_ctrl│       │
-│  └──┬──┘└──┬──┘└──┬──┘└──┬──┘└─────────┘       │
-└─────┼──────┼──────┼──────┼──────────────────────┘
-      │      │      │      │
-┌─────┴──────┴──────┴──────┴──────────────────────┐
-│        OpenAI API + SQLite                        │
-│  GPT-4o (视觉) / Whisper (STT) / TTS / 数据库    │
-└──────────────────────────────────────────────────┘
+浏览器 (Vue3 SPA)
+├── LoginPage        # 登录/注册（JWT + bcrypt）
+├── MainPage         # 主界面
+│   ├── CameraView   # 摄像头（getUserMedia + Canvas滤镜）
+│   ├── ChatPanel    # 对话面板（文字/语音/图片）
+│   ├── VoiceInput   # 语音输入（MediaRecorder + STT）
+│   ├── CreativeToolbar  # 创意工具（前后对比/滤镜/语音命令）
+│   ├── RecognitionPanel # 识别记录展示
+│   ├── Sidebar      # 对话列表管理
+│   └── SettingsModal    # 设置面板（含API直连配置）
+├── api/index.js     # 后端 API 封装
+└── services/directApi.js  # 前端直连 AI 服务
+
+        │ HTTP + JWT
+        ▼
+
+Flask REST API (PythonAnywhere)
+├── app.py           # 路由入口 + JWT认证
+├── config.py        # 配置管理（环境变量）
+├── services/
+│   ├── chat.py      # 对话引擎（上下文管理/模型路由）
+│   ├── vision.py    # 视觉分析（场景/OCR/物体/翻译/情绪）
+│   ├── speech.py    # 语音识别(STT) + 语音合成(TTS)
+│   ├── database.py  # SQLite ORM（用户/会话/消息/截图）
+│   └── cost_control.py  # 限流/统计/速率控制
+
+        │
+        ▼
+
+MIMO AI API (OpenAI 兼容)
+├── mimo-v2-omni     # 视觉理解模型
+├── mimo-v2-flash    # 快速对话模型
+├── mimo-v2.5-asr    # 语音识别
+└── mimo-v2.5-tts    # 语音合成
 ```
 
-### 架构设计亮点
+### 数据流
 
-1. **前后端分离**：前端Vue3 SPA + 后端Flask RESTful API，通过JWT认证
-2. **路由守卫**：前端路由守卫自动拦截未登录用户，跳转登录页
-3. **API拦截器**：Axios请求拦截器自动附加JWT，响应拦截器自动处理401
-4. **服务层分离**：后端按职责拆分为vision/speech/chat/database/cost_control五个服务
-5. **快捷视觉功能**：5种一键视觉分析（场景描述/OCR/物体识别/翻译/情绪分析）
-6. **对话持久化**：SQLite存储用户、会话、消息、截图，支持历史回溯
-
----
-
-## 四、成本控制策略
-
-### 想到的成本控制技巧
-
-| 编号 | 技巧 | 原理 | 是否采用 |
-|------|------|------|---------|
-| C1 | 帧采样 | 不每帧都发送，按固定间隔（如5秒）采样一帧 | ✅ 采用 |
-| C2 | 图像压缩 | 缩放至512px + JPEG质量70%，减少传输和token量 | ✅ 采用 |
-| C3 | 低细节模式 | OpenAI image_url 使用 detail:"low"，降低视觉token消耗 | ✅ 采用 |
-| C4 | 模型路由 | 纯文本用gpt-4o-mini，含图像才用gpt-4o | ✅ 采用 |
-| C5 | 结果缓存 | 相似帧（MD5哈希比对）命中缓存直接返回，避免重复调用 | ✅ 采用 |
-| C6 | 对话历史裁剪 | 只保留最近10轮对话，控制上下文token | ✅ 采用 |
-| C7 | VAD静音检测 | 前端检测到静音后自动停止录音，避免发送无效音频 | ✅ 采用 |
-| C8 | 限流控制 | 每分钟最多20次API调用，防止滥用 | ✅ 采用 |
-| C9 | 视觉上下文摘要 | 后端维护最近画面描述，纯文本对话时注入摘要而非图像 | ✅ 采用 |
-| C10 | 前端预压缩 | 前端captureFrame时即压缩，减少上传带宽 | ✅ 采用 |
-| C11 | 批量帧对比 | 前端对比帧差异，变化不大则不发送 | ❌ 未采用（复杂度高，收益有限） |
-| C12 | 本地OCR预处理 | 先用本地OCR提取文字，减少视觉模型调用 | ❌ 未采用（增加部署复杂度） |
-| C13 | 流式响应 | 使用SSE流式返回，减少用户等待感 | ❌ 未采用（当前场景回复较短） |
-| C14 | 语义缓存 | 对相似语义的问题返回缓存答案 | ❌ 未采用（实现复杂，误判风险高） |
-| C15 | JWT无状态认证 | 使用JWT而非Session，减少数据库查询 | ✅ 采用 |
-| C16 | 数据库连接池 | SQLite WAL模式 + 按需连接，减少资源占用 | ✅ 采用 |
-
-### 实际采用的策略详解
-
-**1. 帧采样（C1）**
-- 默认每5秒自动采样一帧，而非逐帧分析
-- 用户也可手动点击"Capture"即时分析
-- 配置项：`FRAME_SAMPLE_INTERVAL`
-
-**2. 图像压缩（C2 + C10）**
-- 前端captureFrame：缩放到max 640px，JPEG quality 0.7
-- 后端compress_image：二次压缩至512px + quality 70%
-- 一张640x480原图约100KB，压缩后约15-25KB，token消耗降低约70%
-
-**3. 低细节模式（C3）**
-- OpenAI API的image_url参数使用 `detail: "low"`
-- low模式固定消耗85 tokens，high模式可能消耗765+ tokens
-- 节省约89%的视觉token
-
-**4. 模型路由（C4）**
-```python
-def _select_model(has_image: bool) -> str:
-    if has_image:
-        return Config.VISION_MODEL  # gpt-4o
-    return Config.CHAT_MODEL  # gpt-4o-mini
 ```
-- gpt-4o-mini价格约为gpt-4o的1/30
-- 纯文本对话（占大多数）使用mini模型显著降低成本
-
-**5. 结果缓存（C5）**
-- 基于图像base64的MD5哈希做缓存key
-- 缓存TTL默认5分钟
-- 静态场景（如用户对着屏幕）可大幅减少重复调用
-
-**6. 对话历史裁剪（C6）**
-- 只保留最近10轮对话历史
-- 避免上下文无限增长导致token暴增
-
-**7. VAD静音检测（C7）**
-- 前端使用Web Audio API的AnalyserNode计算RMS音量
-- 检测到2秒静音自动停止录音
-- 避免发送空白音频浪费Whisper调用
-
-**8. 视觉上下文摘要（C9）**
-- 后端维护`last_vision_summary`字段
-- 纯文本对话时，将画面描述作为system消息注入
-- 无需每次都附带图像，大幅降低视觉模型调用频率
-
-**9. JWT无状态认证（C15）**
-- 使用Flask-JWT-Extended签发JWT令牌
-- 前端Axios拦截器自动附加Authorization头
-- 无需每次请求查Session，减轻数据库压力
-
-**10. SQLite WAL模式（C16）**
-- 启用WAL日志模式，支持并发读写
-- 按需获取连接，使用完毕立即释放
-
----
-
-## 五、API接口设计
-
-### 认证接口
-| 接口 | 方法 | 说明 |
-|------|------|------|
-| `/api/auth/register` | POST | 用户注册 |
-| `/api/auth/login` | POST | 用户登录 |
-| `/api/auth/me` | GET | 获取当前用户信息 |
-| `/api/auth/settings` | PUT | 更新用户设置 |
-
-### 会话接口
-| 接口 | 方法 | 说明 |
-|------|------|------|
-| `/api/conversations` | POST | 创建新会话 |
-| `/api/conversations` | GET | 获取用户会话列表 |
-| `/api/conversations/<id>` | GET | 获取会话详情+消息 |
-| `/api/conversations/<id>` | PUT | 更新会话（标题/归档） |
-| `/api/conversations/<id>` | DELETE | 删除会话 |
-
-### 对话接口
-| 接口 | 方法 | 说明 |
-|------|------|------|
-| `/api/chat` | POST | 纯文本/图文对话 |
-| `/api/multimodal` | POST | 多模态对话（核心接口，支持TTS） |
-
-### 快捷视觉接口
-| 接口 | 方法 | 说明 |
-|------|------|------|
-| `/api/vision/quick` | POST | 快捷视觉分析（describe/ocr/objects/translate/emotion） |
-
-### 语音接口
-| 接口 | 方法 | 说明 |
-|------|------|------|
-| `/api/stt` | POST | 语音识别 |
-| `/api/tts` | POST | 语音合成 |
-
-### 截图接口
-| 接口 | 方法 | 说明 |
-|------|------|------|
-| `/api/screenshots` | POST | 保存截图 |
-| `/api/screenshots` | GET | 获取截图列表 |
-| `/api/screenshots/<filename>` | GET | 获取截图文件 |
-
-### 统计接口
-| 接口 | 方法 | 说明 |
-|------|------|------|
-| `/api/stats` | GET | 用量统计 |
-| `/api/health` | GET | 健康检查 |
-
----
-
-## 六、数据库设计
-
-### users 表
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| id | INTEGER PK | 用户ID |
-| username | TEXT UNIQUE | 用户名 |
-| password_hash | TEXT | bcrypt加密密码 |
-| avatar_color | TEXT | 头像颜色 |
-| created_at | TEXT | 创建时间 |
-| last_login | TEXT | 最后登录 |
-| settings | TEXT | 用户设置(JSON) |
-
-### conversations 表
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| id | TEXT PK | 会话UUID |
-| user_id | INTEGER FK | 用户ID |
-| title | TEXT | 会话标题 |
-| created_at | TEXT | 创建时间 |
-| updated_at | TEXT | 更新时间 |
-| is_archived | INTEGER | 是否归档 |
-
-### messages 表
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| id | INTEGER PK | 消息ID |
-| conversation_id | TEXT FK | 会话ID |
-| role | TEXT | 角色(user/assistant) |
-| content | TEXT | 消息内容 |
-| has_image | INTEGER | 是否含图片 |
-| image_path | TEXT | 图片路径 |
-| created_at | TEXT | 创建时间 |
-
-### screenshots 表
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| id | INTEGER PK | 截图ID |
-| user_id | INTEGER FK | 用户ID |
-| conversation_id | TEXT FK | 关联会话 |
-| image_path | TEXT | 图片文件名 |
-| description | TEXT | 描述 |
-| created_at | TEXT | 创建时间 |
-
----
-
-## 七、运行方式
-
-### 后端
-```bash
-cd backend
-# 配置环境变量
-cp .env.example .env
-# 编辑 .env 填入 OPENAI_API_KEY
-pip install -r requirements.txt
-python app.py
+用户输入 → 前端处理 → 后端路由 → AI服务 → 后端响应 → 前端渲染
+                     ↘ 直连模式：浏览器 fetch → AI API
 ```
 
-### 前端
-```bash
-cd frontend
-npm install
-npm run dev
+---
+
+## 五、API 接口设计
+
+| 分类 | 端点 | 方法 | 说明 |
+|------|------|------|------|
+| 认证 | `/api/auth/register` | POST | 用户注册 |
+| | `/api/auth/login` | POST | 登录（返回JWT） |
+| | `/api/auth/me` | GET | 当前用户信息 |
+| | `/api/auth/settings` | PUT | 保存设置 |
+| 会话 | `/api/conversations` | GET/POST | 列表/新建 |
+| | `/api/conversations/<id>` | GET/PUT/DELETE | 详情/更新/删除 |
+| 对话 | `/api/chat` | POST | 文本/图文对话 |
+| | `/api/multimodal` | POST | 多模态对话（含TTS） |
+| 视觉 | `/api/vision/quick` | POST | 快捷分析（5种） |
+| 语音 | `/api/stt` | POST | 语音识别 |
+| | `/api/tts` | POST | 语音合成 |
+| 截图 | `/api/screenshots` | GET/POST | 列表/保存 |
+| 统计 | `/api/stats` | GET | 用量统计 |
+| 健康 | `/api/health` | GET | 健康检查 |
+
+---
+
+## 六、数据库设计 (SQLite)
+
+```
+users(id, username, password_hash, avatar_color, created_at, last_login, settings)
+conversations(id, user_id, title, created_at, updated_at, is_archived)
+messages(id, conversation_id, role, content, has_image, image_path, created_at)
+screenshots(id, user_id, conversation_id, image_path, description, created_at)
 ```
 
-访问 http://localhost:5173，首次使用需注册账号。
+---
+
+## 七、部署方案
+
+| 组件 | 平台 | 地址 |
+|------|------|------|
+| 前端 | GitHub Pages | https://shuhuNB515.github.io/Sentio-AI/ |
+| 后端 | PythonAnywhere | https://shuhuNB666.pythonanywhere.com |
+| 域名 | Namecheap DNS | https://shuhu.me (A记录→GitHub Pages IP) |
+| 构建 | GitHub Actions | 自动构建+部署到 gh-pages 分支 |
 
 ---
 
-## 八、成本估算
+## 八、Commit 与 PR 记录
 
-以日均1000次对话为例（其中30%含图像）：
+全周期持续交付：2026-06-12 ~ 2026-06-13，16次 commit + 8个 PR。
 
-| 项目 | 调用次数 | 单价 | 日成本 |
-|------|---------|------|--------|
-| GPT-4o (视觉对话) | 300次 | ~$0.01/次 | $3.00 |
-| GPT-4o-mini (纯文本) | 700次 | ~$0.0003/次 | $0.21 |
-| Whisper (STT) | 500次 | ~$0.006/次 | $3.00 |
-| TTS | 500次 | ~$0.003/次 | $1.50 |
-| **合计** | | | **$7.71** |
-
-采用成本控制策略后，预计可降低40-60%的成本：
-- 帧采样+缓存：减少约50%的视觉调用
-- 模型路由：纯文本用mini，节省约97%文本对话成本
-- VAD+压缩：减少约30%的STT和传输成本
-
-**优化后日成本估算：约$3.5-4.5**
+| # | 日期 | 内容 |
+|---|------|------|
+| PR#1 | 06-12 23:27 | 项目初始化：Vue3 + Flask 骨架 |
+| PR#2 | 06-12 23:30 | 部署配置：GitHub Actions + Pages |
+| PR#3 | 06-12 23:48 | 前后端对接：API协议匹配、字体优化 |
+| PR#4 | 06-13 00:11 | 摄像头/麦克风：HTTP安全检测、图片路径 |
+| PR#5 | 06-13 13:52 | HTTPS安全：isSecureContext检测+徽章 |
+| PR#6 | 06-13 15:12 | 自定义域名：相对路径+CNAME+模型名 |
+| PR#7 | 06-13 16:17 | API直连模式：用户自配Key（原创） |
+| PR#8 | 06-13 16:40 | 文档完善：README+设计文档+Demo稿 |
 
 ---
 
-## 九、创新点总结
+## 九、创新点
 
-1. **快捷视觉操作**：一键执行场景描述、OCR文字识别、物体识别、翻译、情绪分析5种视觉任务，无需手动输入提示词
-2. **端云协同成本控制**：10种成本控制策略组合，预计降低40-60%运营成本
-3. **视觉上下文摘要**：纯文本对话时注入画面摘要而非图像，大幅减少视觉模型调用
-4. **JWT无状态认证**：前后端完全分离，JWT令牌认证，支持水平扩展
-5. **对话持久化**：SQLite轻量级存储，支持历史对话回溯和管理
-6. **实时视觉反馈**：扫描线动画、LIVE标记、时间戳叠加，增强临场感
-7. **多模态融合**：视觉+语音+文字三种输入方式无缝融合，AI回复支持TTS语音播报
+1. **前端API直连**：首创用户自配Key/URL/Model，浏览器直调AI，绕过后端网络限制
+2. **11种成本控制策略组合**：帧采样+压缩+低细节+模型路由+缓存+裁剪+摘要+VAD+限流+直连+JWT
+3. **视觉上下文摘要注入**：定时采样→生成摘要→注入纯文本对话，大幅降低视觉调用
+4. **前后图像对比分析**：拍两张→分别描述→AI对比差异，适合场景变化检测
+5. **实时Canvas滤镜**：赛博朋克/复古/素描三种像素级处理滤镜
+6. **完整语音链路**：MediaRecorder→STT→对话→TTS→Audio播放
