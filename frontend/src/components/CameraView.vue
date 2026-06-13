@@ -104,9 +104,13 @@ const toggleCamera = async () => {
 }
 
 const startCamera = async () => {
-  // 先检查 navigator.mediaDevices 是否存在（HTTP 环境下为 undefined）
+  // 浏览器安全要求：摄像头/麦克风必须 HTTPS 或 localhost
+  if (!window.isSecureContext) {
+    cameraError.value = `当前页面协议: ${window.location.protocol}//  浏览器要求 HTTPS 才能用摄像头。\n请访问: https://shuhuNB515.github.io/Sentio-AI/`
+    return
+  }
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    cameraError.value = '当前页面不是安全连接（HTTPS），浏览器不允许使用摄像头。\n请访问 https://shuhuNB515.github.io/Sentio-AI/'
+    cameraError.value = '浏览器不支持摄像头API，请使用 Chrome/Edge 最新版'
     return
   }
   try {
