@@ -18,9 +18,22 @@ def _get_client():
     return _client
 
 _cache = {}
+_cache_ttl = Config.CACHE_TTL  # 默认300秒
 
 def _cache_key(image_b64: str) -> str:
     return hashlib.md5(image_b64[:500].encode()).hexdigest()
+
+def _cache_get(key: str) -> str | None:
+    """缓存查询，自动清除过期条目"""
+    if key in _cache:
+        val, ts = _cache[key]
+        if time.time() - ts < _cache_ttl:
+            return val
+        del _cache[key]
+    return None
+
+def _cache_set(key: str, val: str):
+    _cache[key] = (val, time.time())
 
 def compress_image(image_b64: str) -> str:
     try:
@@ -62,9 +75,9 @@ def _vision_call(messages: list, max_tokens: int = 300) -> str:
 
 def analyze_frame(image_b64: str, prompt: str = "请描述你看到的画面内容。") -> str:
     key = _cache_key(image_b64)
-    now = time.time()
-    if key in _cache and now - _cache[key]["time"] < Config.CACHE_TTL:
-        return _cache[key]["result"]
+    cached = _cache_get(key)
+    if cached:
+        return cached
 
     compressed = compress_image(image_b64)
     result = _vision_call([{
@@ -74,10 +87,7 @@ def analyze_frame(image_b64: str, prompt: str = "请描述你看到的画面内�
             {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{compressed}", "detail": "low"}}
         ]
     }])
-    _cache[key] = {"result": result, "time": now}
-    expired = [k for k, v in _cache.items() if now - v["time"] > Config.CACHE_TTL]
-    for k in expired:
-        del _cache[k]
+    _cache_set(key, result)
     return result
 
 def analyze_frame_for_chat(image_b64: str, user_message: str, history: list) -> str:
