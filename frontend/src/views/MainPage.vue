@@ -393,6 +393,14 @@ const onActionResult = async (result) => {
 const onScreenshotTaken = async (frame) => {
   if (!currentConvId.value) return
   addToast('截图成功，正在分析...', 'info')
+
+  // 部署环境：非本地且未开直连，走后端
+  const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  if (!isLocal && !isDirectApiEnabled()) {
+    addToast('请先在 ⚙️ 设置中开启 API 直连模式', 'error')
+    return
+  }
+
   try {
     let text
     if (isDirectApiEnabled()) {
@@ -506,6 +514,12 @@ const onCaptureForToolbar = (mode) => {
 const onCompare = async ({ before, after }) => {
   if (!currentConvId.value) return
   addToast('正在分析两张图片的差异...', 'info')
+
+  const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  if (!isLocal && !isDirectApiEnabled()) {
+    addToast('请先在 ⚙️ 设置中开启 API 直连模式', 'error')
+    return
+  }
 
   try {
     let desc1, desc2

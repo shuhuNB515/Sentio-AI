@@ -145,6 +145,19 @@ const sendMessage = async (overrideText = null) => {
   try {
     let reply
 
+    // 部署环境检测：非 localhost 且未开启 API 直连时，后端无法访问 MIMO API
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    if (!isLocal && !isDirectApiEnabled()) {
+      messages.value.push({
+        role: 'assistant',
+        content: `部署后端无法直连 AI 服务（PythonAnywhere 网络限制）。\n\n请在 ⚙️ 设置 → API 直连 中填入你的 MIMO API Key 和 Base URL，开启浏览器直连模式。`,
+        has_image: false
+      })
+      loading.value = false
+      scrollToBottom()
+      return
+    }
+
     // 优先使用前端直连 API
     if (isDirectApiEnabled()) {
       if (props.currentFrame) {
