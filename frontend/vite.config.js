@@ -3,8 +3,8 @@ import vue from '@vitejs/plugin-vue'
 
 export default defineConfig({
   plugins: [vue()],
-  // GitHub Pages 部署路径：仓库名为 Sentio-AI
-  base: '/Sentio-AI/',
+  // 相对路径：兼容 shuhu.me（根路径）和 shuhuNB515.github.io/Sentio-AI（子路径）
+  base: './',
   build: {
     // 单CSS文件减少请求数
     cssCodeSplit: false,
