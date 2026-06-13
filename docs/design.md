@@ -13,6 +13,8 @@ Sentio-AI 是一款**实时视觉 AI 对话助手**。用户打开摄像头与�
 **GitHub**: [https://github.com/shuhuNB515/Sentio-AI](https://github.com/shuhuNB515/Sentio-AI)
 **Demo 视频**: [百度网盘](https://pan.baidu.com/s/1WTH2lF1SPLO4uY59-kEYkQ?pwd=81j8)（提取码: 81j8）
 
+> **⚠️ 网页版需手动配置 API 直连**：PythonAnywhere 免费版代理拦截 MIMO API。访问 https://shuhu.me 后，请进入 ⚙️ 设置 → 开启"API 直连" → 填写 MIMO API Key 并保存。详见 [七、部署方案](#七部署方案)。
+
 **技术栈：**
 - 前端：Vue 3 (Composition API) + Vite + Vue Router + Axios
 - 后端：Flask (Python 3.11) + Flask-JWT-Extended + SQLite
@@ -179,6 +181,19 @@ screenshots(id, user_id, conversation_id, image_path, description, created_at)
 | 后端 | PythonAnywhere | https://shuhuNB666.pythonanywhere.com |
 | 域名 | Namecheap DNS | https://shuhu.me (A记录→GitHub Pages IP) |
 | 构建 | GitHub Actions | 自动构建+部署到 gh-pages 分支 |
+
+### ⚠️ 网页版 API 直连配置（必读）
+
+PythonAnywhere 免费版启用强制代理，**后端无法直连 api.xiaomimimo.com**，所有 API 请求返回 `ProxyError: 403 Forbidden`。
+
+**解决方案**：网页版内置"API 直连"模式——用户自行配置 MIMO API Key，浏览器 `fetch()` 直调 AI API，绕过代理限制。
+
+**配置步骤**：
+1. 登录 → ⚙️ 设置 → API 直连
+2. 填写：API Key（`sk-...`）、Base URL（`https://api.xiaomimimo.com/v1`）、Model
+3. 保存 → 即可正常对话
+
+> 本地开发环境（`localhost`）无需此配置，后端可直连 MIMO API。
 
 ---
 
