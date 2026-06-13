@@ -94,6 +94,7 @@
 <script setup>
 import { ref, watch, nextTick, computed } from 'vue'
 import { chatAPI, conversationAPI } from '../api'
+import { isDirectApiEnabled, chatCompletion, visionCompletion } from '../services/directApi'
 import VoiceInput from './VoiceInput.vue'
 
 const props = defineProps({
@@ -142,19 +143,32 @@ const sendMessage = async (overrideText = null) => {
   scrollToBottom()
 
   try {
-    const res = await chatAPI.multimodal(
-      props.sessionId,
-      text,
-      props.currentFrame,
-      props.enableTTS
-    )
-    messages.value.push({ role: 'assistant', content: res.data.reply, has_image: false })
+    let reply
 
-    // 播放TTS
-    if (props.enableTTS && res.data.audio) {
-      const audio = new Audio(`data:audio/mp3;base64,${res.data.audio}`)
-      audio.play().catch(() => {})
+    // 优先使用前端直连 API
+    if (isDirectApiEnabled()) {
+      if (props.currentFrame) {
+        reply = await visionCompletion(text, props.currentFrame)
+      } else {
+        reply = await chatCompletion([{ role: 'user', content: text }])
+      }
+    } else {
+      const res = await chatAPI.multimodal(
+        props.sessionId,
+        text,
+        props.currentFrame,
+        props.enableTTS
+      )
+      reply = res.data.reply
+
+      // 播放TTS
+      if (props.enableTTS && res.data.audio) {
+        const audio = new Audio(`data:audio/mp3;base64,${res.data.audio}`)
+        audio.play().catch(() => {})
+      }
     }
+
+    messages.value.push({ role: 'assistant', content: reply, has_image: false })
   } catch (e) {
     messages.value.push({
       role: 'assistant',
