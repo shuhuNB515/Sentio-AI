@@ -159,6 +159,44 @@
           </div>
         </div>
 
+        <!-- API 设置 -->
+        <div class="settings-section">
+          <h3 class="section-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+            API 直连
+          </h3>
+          <div class="setting-item" style="flex-direction:column;align-items:stretch;gap:6px">
+            <div class="setting-info">
+              <span class="setting-label">启用前端直连</span>
+              <span class="setting-desc">绕过后端，浏览器直接调用 AI API（需要 HTTPS）</span>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" v-model="settings.directApiEnabled" />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <template v-if="settings.directApiEnabled">
+            <div class="setting-item" style="flex-direction:column;align-items:stretch;gap:4px">
+              <span class="setting-label">API Key</span>
+              <input type="password" v-model="settings.directApiKey" placeholder="sk-..." class="text-input" />
+            </div>
+            <div class="setting-item" style="flex-direction:column;align-items:stretch;gap:4px">
+              <span class="setting-label">Base URL</span>
+              <input type="text" v-model="settings.directBaseUrl" placeholder="https://api.xiaomimimo.com/v1" class="text-input" />
+            </div>
+            <div class="setting-item" style="flex-direction:column;align-items:stretch;gap:4px">
+              <span class="setting-label">对话模型</span>
+              <input type="text" v-model="settings.directChatModel" placeholder="mimo-v2-flash" class="text-input" />
+            </div>
+            <div class="setting-item" style="flex-direction:column;align-items:stretch;gap:4px">
+              <span class="setting-label">视觉模型</span>
+              <input type="text" v-model="settings.directVisionModel" placeholder="mimo-v2-omni" class="text-input" />
+            </div>
+          </template>
+        </div>
+
         <!-- 快捷键提示 -->
         <div class="settings-section">
           <h3 class="section-title">
@@ -209,6 +247,11 @@ const defaultSettings = {
   silenceDuration: 20,
   continuousMode: false,
   chatModel: 'mimo-v2-flash',
+  directApiEnabled: false,
+  directApiKey: '',
+  directBaseUrl: 'https://api.xiaomimimo.com/v1',
+  directChatModel: 'mimo-v2-flash',
+  directVisionModel: 'mimo-v2-omni',
 }
 
 const settings = reactive({ ...defaultSettings })
@@ -435,6 +478,26 @@ const saveSettings = async () => {
 
 .select-input:focus {
   border-color: var(--accent-primary);
+}
+
+.text-input {
+  padding: 8px 10px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 13px;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.text-input:focus {
+  border-color: var(--accent-primary);
+}
+
+.text-input::placeholder {
+  color: var(--text-muted);
 }
 
 /* 快捷键 */
