@@ -130,6 +130,19 @@ Sentio-AI 是一个**实时视觉 + 语音 + 对话**的全栈 AI 助手。它�
 | 对话模型 | `mimo-v2-flash` |
 | 视觉模型 | `mimo-v2-omni` |
 
+### 后端会话权限回归测试
+
+安装 `backend/requirements.txt` 中的依赖后运行：
+
+```bash
+cd backend
+python -m unittest discover -s tests -p '*_test.py' -v
+```
+
+测试使用临时 SQLite 数据库、真实 JWT 与两个本地测试用户，验证会话读取、修改、删除、聊天、多模态、快捷视觉、截图关联及下载的所有权；仅替换外部模型调用，不发送真实请求。
+
+截图下载接口 `/api/screenshots/<filename>` 需要 `Authorization: Bearer <token>`，仅允许截图所有者访问；未知文件和其他用户的文件统一返回 404。通过 API 客户端携带认证头获取图片，不再提供匿名图片直链。
+
 ### 💻 本地开发（无需 API 直连）
 
 本地后端可直连 MIMO，只需在 `.env` 中配置 Key：
