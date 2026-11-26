@@ -16,5 +16,5 @@ from services.database import (
     create_conversation, get_user_conversations, get_conversation,
     update_conversation_title, delete_conversation, archive_conversation,
     add_message, get_conversation_messages,
-    add_screenshot, get_user_screenshots
+    add_screenshot, get_user_screenshots, get_user_screenshot
 )

@@ -201,3 +201,12 @@ def get_user_screenshots(user_id: int, limit: int = 20) -> list:
     ).fetchall()
     conn.close()
     return [dict(r) for r in rows]
+
+def get_user_screenshot(user_id: int, image_path: str) -> dict:
+    conn = get_db()
+    row = conn.execute(
+        "SELECT * FROM screenshots WHERE user_id = ? AND image_path = ?",
+        (user_id, image_path)
+    ).fetchone()
+    conn.close()
+    return dict(row) if row else None

@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 # 加载.env文件（override=True确保覆盖系统环境变量）
 load_dotenv(override=True)
 
-from flask import Flask, request, jsonify, Response, send_file
+from flask import Flask, request, jsonify, Response, send_from_directory, abort, make_response
 from flask_cors import CORS
 from flask_jwt_extended import (
     JWTManager, create_access_token, jwt_required, get_jwt_identity
@@ -27,7 +27,7 @@ from services import (
     create_conversation, get_user_conversations, get_conversation,
     update_conversation_title, delete_conversation, archive_conversation,
     add_message, get_conversation_messages,
-    add_screenshot, get_user_screenshots
+    add_screenshot, get_user_screenshots, get_user_screenshot
 )
 
 app = Flask(__name__)
@@ -134,6 +134,13 @@ def save_settings():
 
 # ============ 会话接口 ============
 
+def _require_owned_conversation(conv_id):
+    """仅允许当前登录用户访问自己的会话。"""
+    conv = get_conversation(conv_id)
+    if not conv or conv["user_id"] != int(get_jwt_identity()):
+        abort(make_response(jsonify({"error": "会话不存在"}), 404))
+    return conv
+
 @app.route("/api/conversations", methods=["POST"])
 @jwt_required()
 def new_conversation():
@@ -155,9 +162,7 @@ def list_conversations():
 @app.route("/api/conversations/<conv_id>", methods=["GET"])
 @jwt_required()
 def get_conv(conv_id):
-    conv = get_conversation(conv_id)
-    if not conv:
-        return jsonify({"error": "会话不存在"}), 404
+    conv = _require_owned_conversation(conv_id)
     messages = get_conversation_messages(conv_id)
     return jsonify({"conversation": conv, "messages": messages})
 
@@ -165,6 +170,7 @@ def get_conv(conv_id):
 @app.route("/api/conversations/<conv_id>", methods=["PUT"])
 @jwt_required()
 def update_conv(conv_id):
+    _require_owned_conversation(conv_id)
     data = request.json
     if "title" in data:
         update_conversation_title(conv_id, data["title"])
@@ -176,6 +182,7 @@ def update_conv(conv_id):
 @app.route("/api/conversations/<conv_id>", methods=["DELETE"])
 @jwt_required()
 def remove_conv(conv_id):
+    _require_owned_conversation(conv_id)
     delete_conversation(conv_id)
     clear_session(conv_id)
     return jsonify({"status": "ok"})
@@ -196,6 +203,8 @@ def chat_endpoint():
 
     if not session_id or not user_message:
         return jsonify({"error": "缺少必要参数"}), 400
+
+    _require_owned_conversation(session_id)
 
     try:
         # 数据库操作：保存用户消息（失败不影响对话）
@@ -242,6 +251,8 @@ def multimodal_endpoint():
 
     if not session_id:
         return jsonify({"error": "缺少session_id"}), 400
+
+    _require_owned_conversation(session_id)
 
     try:
         if image_b64:
@@ -302,6 +313,9 @@ def vision_quick():
 
     if action not in action_map:
         return jsonify({"error": f"不支持的操作: {action}"}), 400
+
+    if session_id:
+        _require_owned_conversation(session_id)
 
     try:
         result = action_map[action](image_b64)
@@ -368,6 +382,9 @@ def save_screenshot():
     if not image_b64:
         return jsonify({"error": "缺少图像数据"}), 400
 
+    if conv_id:
+        _require_owned_conversation(conv_id)
+
     try:
         filename = f"{uuid.uuid4().hex}.jpg"
         filepath = os.path.join(Config.SCREENSHOT_DIR, filename)
@@ -390,11 +407,12 @@ def list_screenshots():
 
 
 @app.route("/api/screenshots/<path:filename>", methods=["GET"])
+@jwt_required()
 def get_screenshot(filename):
-    filepath = os.path.join(Config.SCREENSHOT_DIR, filename)
-    if os.path.exists(filepath):
-        return send_file(filepath, mimetype="image/jpeg")
-    return jsonify({"error": "文件不存在"}), 404
+    user_id = int(get_jwt_identity())
+    if not get_user_screenshot(user_id, filename):
+        return jsonify({"error": "文件不存在"}), 404
+    return send_from_directory(Config.SCREENSHOT_DIR, filename, mimetype="image/jpeg")
 
 # ============ 统计接口 ============
 
