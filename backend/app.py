@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 # 加载.env文件（override=True确保覆盖系统环境变量）
 load_dotenv(override=True)
 
-from flask import Flask, request, jsonify, Response, send_file
+from flask import Flask, request, jsonify, Response, send_from_directory
 from flask_cors import CORS
 from flask_jwt_extended import (
     JWTManager, create_access_token, jwt_required, get_jwt_identity
@@ -32,11 +32,19 @@ from services import (
 
 app = Flask(__name__)
 app.config.from_object(Config)
-CORS(app, origins="*")
+_cors_origins = [o.strip() for o in Config.CORS_ORIGINS.split(",") if o.strip()]
+CORS(app, origins=_cors_origins or ["http://localhost:5173"])
 jwt = JWTManager(app)
 
-# 初始化数据库
+# 初始化数据库与截图目录
 init_db()
+os.makedirs(Config.SCREENSHOT_DIR, exist_ok=True)
+
+
+def _json_body():
+    """安全解析 JSON 请求体，避免畸形或空请求体触发 500 异常"""
+    data = request.get_json(silent=True)
+    return data if isinstance(data, dict) else {}
 
 # ============ 根路由 ============
 
@@ -55,16 +63,19 @@ def home():
 
 @app.route("/api/auth/register", methods=["POST"])
 def register():
-    data = request.json
-    username = data.get("username", "").strip()
-    password = data.get("password", "")
+    if not check_rate_limit(f"auth:{request.remote_addr}"):
+        return jsonify({"error": "请求过于频繁，请稍后再试"}), 429
+
+    data = _json_body()
+    username = str(data.get("username", "")).strip()
+    password = str(data.get("password", ""))
 
     if not username or not password:
         return jsonify({"error": "用户名和密码不能为空"}), 400
     if len(username) < 3 or len(username) > 20:
         return jsonify({"error": "用户名长度需在3-20之间"}), 400
-    if len(password) < 6:
-        return jsonify({"error": "密码长度至少6位"}), 400
+    if len(password) < 6 or len(password.encode("utf-8")) > 72:
+        return jsonify({"error": "密码长度需在6-72字节之间"}), 400
 
     if get_user_by_username(username):
         return jsonify({"error": "用户名已存在"}), 409
@@ -74,7 +85,7 @@ def register():
     import random
     avatar_color = random.choice(colors)
 
-    password_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+    password_hash = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode()
     user_id = create_user(username, password_hash, avatar_color)
 
     token = create_access_token(identity=str(user_id))
@@ -86,12 +97,19 @@ def register():
 
 @app.route("/api/auth/login", methods=["POST"])
 def login():
-    data = request.json
-    username = data.get("username", "")
-    password = data.get("password", "")
+    if not check_rate_limit(f"auth:{request.remote_addr}"):
+        return jsonify({"error": "请求过于频繁，请稍后再试"}), 429
+
+    data = _json_body()
+    username = str(data.get("username", "")).strip()
+    password = str(data.get("password", ""))
 
     user = get_user_by_username(username)
-    if not user or not bcrypt.checkpw(password.encode(), user["password_hash"].encode()):
+    if (
+        not user
+        or len(password.encode("utf-8")) > 72
+        or not bcrypt.checkpw(password.encode("utf-8"), user["password_hash"].encode())
+    ):
         return jsonify({"error": "用户名或密码错误"}), 401
 
     update_user_login(user["id"])
@@ -128,7 +146,7 @@ def get_me():
 @jwt_required()
 def save_settings():
     user_id = int(get_jwt_identity())
-    settings = request.json.get("settings", {})
+    settings = _json_body().get("settings", {})
     update_user_settings(user_id, settings)
     return jsonify({"status": "ok"})
 
@@ -139,7 +157,7 @@ def save_settings():
 def new_conversation():
     user_id = int(get_jwt_identity())
     conv_id = str(uuid.uuid4())
-    title = request.json.get("title", "New Conversation")
+    title = _json_body().get("title", "New Conversation")
     create_conversation(conv_id, user_id, title)
     return jsonify({"id": conv_id, "title": title})
 
@@ -155,8 +173,9 @@ def list_conversations():
 @app.route("/api/conversations/<conv_id>", methods=["GET"])
 @jwt_required()
 def get_conv(conv_id):
+    user_id = int(get_jwt_identity())
     conv = get_conversation(conv_id)
-    if not conv:
+    if not conv or conv.get("user_id") != user_id:
         return jsonify({"error": "会话不存在"}), 404
     messages = get_conversation_messages(conv_id)
     return jsonify({"conversation": conv, "messages": messages})
@@ -165,7 +184,11 @@ def get_conv(conv_id):
 @app.route("/api/conversations/<conv_id>", methods=["PUT"])
 @jwt_required()
 def update_conv(conv_id):
-    data = request.json
+    user_id = int(get_jwt_identity())
+    conv = get_conversation(conv_id)
+    if not conv or conv.get("user_id") != user_id:
+        return jsonify({"error": "会话不存在"}), 404
+    data = _json_body()
     if "title" in data:
         update_conversation_title(conv_id, data["title"])
     if data.get("archive"):
@@ -176,6 +199,10 @@ def update_conv(conv_id):
 @app.route("/api/conversations/<conv_id>", methods=["DELETE"])
 @jwt_required()
 def remove_conv(conv_id):
+    user_id = int(get_jwt_identity())
+    conv = get_conversation(conv_id)
+    if not conv or conv.get("user_id") != user_id:
+        return jsonify({"error": "会话不存在"}), 404
     delete_conversation(conv_id)
     clear_session(conv_id)
     return jsonify({"status": "ok"})
@@ -189,7 +216,7 @@ def chat_endpoint():
     if not check_rate_limit(client_id):
         return jsonify({"error": "请求过于频繁，请稍后再试"}), 429
 
-    data = request.json
+    data = _json_body()
     session_id = data.get("session_id")
     user_message = data.get("message", "")
     image_b64 = data.get("image")
@@ -234,7 +261,7 @@ def multimodal_endpoint():
     if not check_rate_limit(client_id):
         return jsonify({"error": "请求过于频繁"}), 429
 
-    data = request.json
+    data = _json_body()
     session_id = data.get("session_id")
     user_message = data.get("message", "")
     image_b64 = data.get("image")
@@ -284,7 +311,7 @@ def vision_quick():
     if not check_rate_limit(client_id):
         return jsonify({"error": "请求过于频繁"}), 429
 
-    data = request.json
+    data = _json_body()
     image_b64 = data.get("image")
     action = data.get("action", "describe")
     session_id = data.get("session_id")
@@ -342,7 +369,7 @@ def stt_endpoint():
 @app.route("/api/tts", methods=["POST"])
 @jwt_required()
 def tts_endpoint():
-    data = request.json
+    data = _json_body()
     text = data.get("text", "")
     if not text:
         return jsonify({"error": "缺少文本"}), 400
@@ -360,7 +387,7 @@ def tts_endpoint():
 @jwt_required()
 def save_screenshot():
     user_id = int(get_jwt_identity())
-    data = request.json
+    data = _json_body()
     image_b64 = data.get("image", "")
     description = data.get("description", "")
     conv_id = data.get("conversation_id")
@@ -389,12 +416,12 @@ def list_screenshots():
     return jsonify(screenshots)
 
 
-@app.route("/api/screenshots/<path:filename>", methods=["GET"])
+@app.route("/api/screenshots/<filename>", methods=["GET"])
 def get_screenshot(filename):
-    filepath = os.path.join(Config.SCREENSHOT_DIR, filename)
-    if os.path.exists(filepath):
-        return send_file(filepath, mimetype="image/jpeg")
-    return jsonify({"error": "文件不存在"}), 404
+    # 防止路径穿越读取任意文件
+    if os.path.basename(filename) != filename or not filename.endswith(".jpg"):
+        return jsonify({"error": "非法文件名"}), 400
+    return send_from_directory(Config.SCREENSHOT_DIR, filename, mimetype="image/jpeg")
 
 # ============ 统计接口 ============
 
